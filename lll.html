@@ -1,6 +1,108 @@
-<h1> diary</h1>
-<h2> 2024/04/02</h2>
-<p>今天在b站发现了一个好视频！</p>
-<h2> 2024/04/03</h2>
-<p>anni day!</p>
-<p>欢迎来到我的树洞</p>
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>欢迎来到我的树洞</title>
+    <style>
+      * {
+        padding: 0;
+        margin: 0;
+      }
+      .flex {
+        display: flex;
+      }
+      .column {
+        flex-direction: column;
+      }
+      .flex1 {
+        flex: 1;
+      }
+      p {
+        font-family: Garamond, "Times New Roman", Times, serif;
+      }
+
+      p.display {
+        font-family: "Courier New", Courier, monospace;
+        margin-bottom: 18vh;
+        font-size: 10vh;
+        color: white;
+        text-align: center;
+        text-shadow: 5px 5px 2px pink;
+      }
+      p.label {
+        color: white;
+        font-size: 20px;
+        flex: 1;
+        font-weight: bold;
+        text-align: center;
+        vertical-align: bottom;
+      }
+    </style>
+  </head>
+  <body
+    style="
+      margin: 0;
+      height: 100vh;
+      border: 0;
+      background-image: url(star.jpg);
+      background-position: center center;
+      background-repeat: no-repeat;
+      background-attachment: fixed;
+      background-size: cover;
+    "
+    class="flex column"
+  >
+    <!--top-banner-->
+    <div
+      style="
+        height: 20vh;
+        padding: 2vh 10%;
+        align-items: center;
+        justify-content: start;
+        text-align: center;
+      "
+      class="flex column"
+    >
+      <!--头像栏-->
+      <div
+        style="
+          height: 40px;
+          justify-self: start;
+          align-self: start;
+          width: 50%;
+          align-items: center;
+        "
+        class="flex"
+      >
+        <img
+          style="
+            border: 2px solid white;
+            border-radius: 50%;
+            height: 100%;
+            display: inline;
+          "
+          src="touxiang.jpg"
+          alt="touxiang"
+        />
+        <img
+          style="height: 100%; display: inline"
+          src="qinhaoyu.png"
+          alt="biaoshi"
+        />
+        <p class="label">Basic</p>
+        <p class="label">Life</p>
+        <p class="label">Science</p>
+        <p class="label">Hobby</p>
+      </div>
+    </div>
+    <!--main-->
+    <div
+      style="align-items: center; justify-content: center; height: 80vh"
+      class="flex column"
+    >
+      <p class="display">Welcome!</p>
+    </div>
+  </body>
+</html>
