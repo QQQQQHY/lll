@@ -1,55 +1,379 @@
-// 拖放功能
-function enableDragAndDrop() {
-    const linksContainer = document.getElementById('links');
-
-    linksContainer.addEventListener('dragstart', function (e) {
-        if (e.target.classList.contains('link-item')) {
-            e.target.classList.add('dragging');
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我的导航页</title>
+    <link rel="icon" type="image/png" href="index.png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        /* 全局样式 */
+        body {
+            font-family: '微软雅黑', Arial, sans-serif;
+            background: linear-gradient(135deg, #ff9966, #ff5e62);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
         }
-    });
 
-    linksContainer.addEventListener('dragover', function (e) {
-        e.preventDefault();
-        const draggingItem = linksContainer.querySelector('.dragging');
-        const siblings = [...linksContainer.querySelectorAll('.link-item:not(.dragging)')];
-        const nextSibling = siblings.find(sibling => e.clientY <= sibling.offsetTop + sibling.offsetHeight / 2);
-        linksContainer.insertBefore(draggingItem, nextSibling);
-    });
-
-    linksContainer.addEventListener('dragend', function (e) {
-        if (e.target.classList.contains('link-item')) {
-            e.target.classList.remove('dragging');
-            updateLinksOrder();
+        /* 横幅样式 */
+        #banner {
+            background-color: rgba(255, 255, 255, 0.9);
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            max-width: 800px;
+            width: 90%;
+            margin: 20px;
+            text-align: center;
         }
-    });
-}
 
-// 编辑链接
-function enableEditLinks() {
-    document.getElementById('links').addEventListener('click', function (e) {
-        if (e.target.classList.contains('edit-icon')) {
-            const linkItem = e.target.closest('.link-item');
-            const linkButton = linkItem.querySelector('.link-button');
-            const name = linkButton.textContent;
-            const url = linkButton.href;
+        #banner h1 {
+            color: #ff5e62;
+            margin-bottom: 1rem;
+        }
 
-            // 弹出模态框
-            document.getElementById('link-name').value = name;
-            document.getElementById('link-url').value = url;
-            document.getElementById('modal').style.display = 'flex';
+        #date {
+            font-size: 1.2rem;
+            color: #666;
+            margin-bottom: 1rem;
+        }
 
-            // 更新链接
-            document.getElementById('modal-submit').onclick = function () {
-                const newName = document.getElementById('link-name').value;
-                const newUrl = document.getElementById('link-url').value;
+        #quote {
+            font-size: 1.5rem;
+            line-height: 1.6;
+            color: #333;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 1s ease-in;
+        }
 
-                if (newName && newUrl) {
-                    linkButton.textContent = newName;
-                    linkButton.href = newUrl;
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* 链接区域样式 */
+        #links {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 20px;
+            max-width: 1000px;
+            width: 90%;
+            margin: 20px;
+            padding: 20px;
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .link-item {
+            position: relative;
+            cursor: move;
+            transition: transform 0.2s ease;
+        }
+
+        .link-item.dragging {
+            opacity: 0.5;
+        }
+
+        .link-button {
+            background-color: #ff9966;
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            text-align: center;
+            text-decoration: none;
+            display: block;
+            width: 100%;
+        }
+
+        .link-button:hover {
+            background-color: #ff5e62;
+        }
+
+        .edit-icon {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            color: white;
+            cursor: pointer;
+            font-size: 0.8rem;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            background: rgba(0,0,0,0.3);
+            padding: 3px;
+            border-radius: 3px;
+        }
+
+        .link-item:hover .edit-icon {
+            opacity: 1;
+        }
+
+        /* 添加链接按钮样式 */
+        #add-link-button {
+            background-color: rgba(255, 153, 102, 0.8);
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 150px;
+            margin: 20px;
+        }
+
+        #add-link-button:hover {
+            background-color: rgba(255, 94, 98, 0.8);
+        }
+
+        /* 模态框样式 */
+        #modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        #modal-content {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+        }
+
+        #modal-content h2 {
+            color: #ff5e62;
+            margin-bottom: 1rem;
+        }
+
+        #modal-content input {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 1rem;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 1rem;
+        }
+
+        #modal-content button {
+            background-color: #ff9966;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        #modal-content button:hover {
+            background-color: #ff5e62;
+        }
+    </style>
+</head>
+<body>
+    <!-- 横幅 -->
+    <div id="banner">
+        <h1>🌈 今日鼓励 🌟</h1>
+        <div id="date"></div>
+        <div id="quote"></div>
+    </div>
+
+    <!-- 链接区域 -->
+    <div id="links"></div>
+
+    <!-- 添加链接按钮 -->
+    <button id="add-link-button">+</button>
+
+    <!-- 模态框 -->
+    <div id="modal">
+        <div id="modal-content">
+            <h2>添加链接</h2>
+            <input type="text" id="link-name" placeholder="链接名称" required>
+            <input type="url" id="link-url" placeholder="链接地址（以http://或https://开头）" required>
+            <button id="modal-submit">保存</button>
+        </div>
+    </div>
+
+    <script>
+        // 获取当天日期（格式：YYYY-MM-DD）
+        function getTodayDate() {
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = String(today.getMonth() + 1).padStart(2, '0');
+            const day = String(today.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
+        // 根据日期生成随机种子
+        function getSeedFromDate(date) {
+            return parseInt(date.replace(/-/g, ''), 10);
+        }
+
+        // 根据种子生成固定随机索引
+        function getFixedRandomIndex(seed, length) {
+            const random = Math.sin(seed) * 10000;
+            return Math.floor((random - Math.floor(random)) * length);
+        }
+
+        // 加载每日鼓励语句
+        async function loadDailyQuote() {
+            try {
+                const todayDate = getTodayDate();
+                document.getElementById('date').textContent = `今天是：${todayDate}`;
+
+                const response = await fetch('quotes.json');
+                if (!response.ok) throw new Error(`HTTP错误! 状态码: ${response.status}`);
+                
+                const quotes = await response.json();
+                if (!Array.isArray(quotes) || quotes.length === 0) throw new Error('无效的语句数据');
+
+                const seed = getSeedFromDate(todayDate);
+                const fixedIndex = getFixedRandomIndex(seed, quotes.length);
+                document.getElementById('quote').textContent = quotes[fixedIndex];
+            } catch (error) {
+                console.error('加载鼓励语句失败:', error);
+                document.getElementById('quote').textContent = "加载鼓励语句失败";
+            }
+        }
+
+        // 加载链接
+        function loadLinks() {
+            const links = JSON.parse(localStorage.getItem('links')) || [];
+            const linksContainer = document.getElementById('links');
+            linksContainer.innerHTML = links.map(link => `
+                <div class="link-item" draggable="true">
+                    <a href="${link.url}" class="link-button" target="_blank">${link.name}</a>
+                    <i class="fas fa-edit edit-icon"></i>
+                </div>
+            `).join('');
+        }
+
+        // 更新链接顺序
+        function updateLinksOrder() {
+            const links = [];
+            document.querySelectorAll('.link-item').forEach(item => {
+                const name = item.querySelector('.link-button').textContent;
+                const url = item.querySelector('.link-button').href;
+                links.push({ name, url });
+            });
+            localStorage.setItem('links', JSON.stringify(links));
+        }
+
+        // 拖放功能
+        function enableDragAndDrop() {
+            const linksContainer = document.getElementById('links');
+
+            linksContainer.addEventListener('dragstart', (e) => {
+                if (e.target.closest('.link-item')) {
+                    e.target.closest('.link-item').classList.add('dragging');
+                }
+            });
+
+            linksContainer.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                const draggingItem = linksContainer.querySelector('.dragging');
+                const siblings = [...linksContainer.querySelectorAll('.link-item:not(.dragging)')];
+                const nextSibling = siblings.find(sibling => e.clientY <= sibling.offsetTop + sibling.offsetHeight / 2);
+                linksContainer.insertBefore(draggingItem, nextSibling);
+            });
+
+            linksContainer.addEventListener('dragend', (e) => {
+                const item = e.target.closest('.link-item');
+                if (item) {
+                    item.classList.remove('dragging');
                     updateLinksOrder();
+                }
+            });
+        }
+
+        // 编辑链接功能
+        function enableEditLinks() {
+            document.getElementById('links').addEventListener('click', (e) => {
+                if (e.target.classList.contains('edit-icon')) {
+                    const linkItem = e.target.closest('.link-item');
+                    const linkButton = linkItem.querySelector('.link-button');
+                    
+                    document.getElementById('link-name').value = linkButton.textContent;
+                    document.getElementById('link-url').value = linkButton.href;
+                    document.getElementById('modal').style.display = 'flex';
+
+                    // 更新提交处理
+                    const submitHandler = () => {
+                        const newName = document.getElementById('link-name').value;
+                        const newUrl = document.getElementById('link-url').value;
+                        if (newName && newUrl) {
+                            linkButton.textContent = newName;
+                            linkButton.href = newUrl;
+                            updateLinksOrder();
+                            document.getElementById('modal').style.display = 'none';
+                            document.getElementById('modal-submit').removeEventListener('click', submitHandler);
+                        }
+                    };
+                    document.getElementById('modal-submit').addEventListener('click', submitHandler);
+                }
+            });
+        }
+
+        // 初始化事件监听
+        window.onload = () => {
+            loadDailyQuote();
+            loadLinks();
+            enableDragAndDrop();
+            enableEditLinks();
+        };
+
+        // 添加链接功能
+        document.getElementById('add-link-button').addEventListener('click', () => {
+            document.getElementById('modal').style.display = 'flex';
+            document.getElementById('link-name').value = '';
+            document.getElementById('link-url').value = '';
+
+            const submitHandler = () => {
+                const name = document.getElementById('link-name').value;
+                const url = document.getElementById('link-url').value;
+                if (name && url) {
+                    const links = JSON.parse(localStorage.getItem('links')) || [];
+                    links.push({ name, url });
+                    localStorage.setItem('links', JSON.stringify(links));
+                    loadLinks();
                     document.getElementById('modal').style.display = 'none';
+                    document.getElementById('modal-submit').removeEventListener('click', submitHandler);
                 }
             };
-        }
-    });
-}
+            document.getElementById('modal-submit').addEventListener('click', submitHandler);
+        });
+
+        // 关闭模态框
+        document.getElementById('modal').addEventListener('click', (e) => {
+            if (e.target === e.currentTarget) {
+                e.currentTarget.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>
