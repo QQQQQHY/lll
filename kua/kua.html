@@ -30,6 +30,12 @@
             margin-bottom: 1.5rem;
         }
 
+        #date {
+            font-size: 1.2rem;
+            color: #666;
+            margin-bottom: 1rem;
+        }
+
         #quote {
             font-size: 1.8rem;
             line-height: 1.6;
@@ -44,47 +50,55 @@
             from { opacity: 0; }
             to { opacity: 1; }
         }
-
-        button {
-            background: #ff9966;
-            border: none;
-            padding: 12px 25px;
-            color: white;
-            border-radius: 25px;
-            cursor: pointer;
-            font-size: 1.1rem;
-            transition: transform 0.3s ease;
-            margin-top: 20px;
-        }
-
-        button:hover {
-            transform: scale(1.05);
-            background: #ff5e62;
-        }
     </style>
 </head>
 <body>
     <div id="container">
         <h1>🌈 今日鼓励 🌟</h1>
+        <div id="date"></div>
         <div id="quote"></div>
-        <button onclick="loadQuote()">新的鼓励</button>
     </div>
 
     <script>
-        async function loadQuote() {
+        // 获取当天日期（格式：YYYY-MM-DD）
+        function getTodayDate() {
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = String(today.getMonth() + 1).padStart(2, '0');
+            const day = String(today.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
+        // 根据日期生成一个固定的随机种子
+        function getSeedFromDate(date) {
+            const dateStr = date.replace(/-/g, ''); // 去掉日期中的横杠
+            return parseInt(dateStr, 10); // 将日期字符串转换为数字
+        }
+
+        // 根据种子生成一个固定的随机索引
+        function getFixedRandomIndex(seed, length) {
+            const random = Math.sin(seed) * 10000;
+            return Math.floor((random - Math.floor(random)) * length);
+        }
+
+        async function loadDailyQuote() {
             try {
-                // 1. 获取JSON文件
+                // 1. 获取当天日期
+                const todayDate = getTodayDate();
+                document.getElementById('date').textContent = `今天是：${todayDate}`;
+
+                // 2. 获取JSON文件
                 const response = await fetch('quotes.json');
 
-                // 2. 检查响应是否成功
+                // 3. 检查响应是否成功
                 if (!response.ok) {
                     throw new Error(`HTTP错误! 状态码: ${response.status}`);
                 }
 
-                // 3. 解析JSON数据
+                // 4. 解析JSON数据
                 const quotes = await response.json();
 
-                // 4. 检查quotes是否为数组且不为空
+                // 5. 检查quotes是否为数组且不为空
                 if (!Array.isArray(quotes)) {
                     throw new Error('JSON数据不是数组');
                 }
@@ -92,19 +106,22 @@
                     throw new Error('JSON数据为空');
                 }
 
-                // 5. 生成随机索引并显示语句
-                const randomIndex = Math.floor(Math.random() * quotes.length);
-                document.getElementById('quote').textContent = quotes[randomIndex];
+                // 6. 根据日期生成固定随机索引
+                const seed = getSeedFromDate(todayDate);
+                const fixedIndex = getFixedRandomIndex(seed, quotes.length);
+
+                // 7. 显示固定语句
+                document.getElementById('quote').textContent = quotes[fixedIndex];
 
             } catch (error) {
-                // 6. 错误处理
+                // 8. 错误处理
                 console.error('加载鼓励语句失败:', error);
                 document.getElementById('quote').textContent = "加载鼓励语句失败，请检查控制台。";
             }
         }
 
-        // 7. 页面加载时调用
-        window.onload = loadQuote;
+        // 页面加载时调用
+        window.onload = loadDailyQuote;
     </script>
 </body>
 </html>
