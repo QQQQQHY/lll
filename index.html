@@ -32,6 +32,10 @@
         #banner h1 {
             color: white;
             margin-bottom: 1rem;
+              display: flex;          /* 启用 Flex 布局 */
+              gap: 10px;              /* 可选：设置子元素间距 */
+              overflow-x: auto;       /* 可选：内容溢出时显示滚动条 */
+              /* justify-content: start; */  /* 可选：控制子元素对齐方式 */
         }
 
         #date {
@@ -198,7 +202,7 @@
 <body>
     <!-- 上方横幅 -->
     <div id="banner">
-        <h1>🌈 <div id="quote"></div> 🌟</h1>
+        <h1 id="h1-quote">🌈 <div id="quote"></div> 🌟</h1>
         <div id="date"></div>
         
     </div>
