@@ -1,301 +1,55 @@
-<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>我的导航页</title>
-    <link rel="icon" type="image/png" href="index.png"> <!-- 添加的 favicon -->
-    <style>
-        /* 全局样式 */
-        body {
-            font-family: '微软雅黑', Arial, sans-serif;
-            background: linear-gradient(135deg, #ff9966, #ff5e62);
-            margin: 0;
-            padding: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            min-height: 100vh;
+// 拖放功能
+function enableDragAndDrop() {
+    const linksContainer = document.getElementById('links');
+
+    linksContainer.addEventListener('dragstart', function (e) {
+        if (e.target.classList.contains('link-item')) {
+            e.target.classList.add('dragging');
         }
+    });
 
-        /* 横幅样式 */
-        #banner {
-            background-color: rgba(255, 255, 255, 0.9);
-            padding: 2rem;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-            max-width: 800px;
-            width: 90%;
-            margin: 20px;
-            text-align: center;
+    linksContainer.addEventListener('dragover', function (e) {
+        e.preventDefault();
+        const draggingItem = linksContainer.querySelector('.dragging');
+        const siblings = [...linksContainer.querySelectorAll('.link-item:not(.dragging)')];
+        const nextSibling = siblings.find(sibling => e.clientY <= sibling.offsetTop + sibling.offsetHeight / 2);
+        linksContainer.insertBefore(draggingItem, nextSibling);
+    });
+
+    linksContainer.addEventListener('dragend', function (e) {
+        if (e.target.classList.contains('link-item')) {
+            e.target.classList.remove('dragging');
+            updateLinksOrder();
         }
+    });
+}
 
-        #banner h1 {
-            color: #ff5e62;
-            margin-bottom: 1rem;
-        }
+// 编辑链接
+function enableEditLinks() {
+    document.getElementById('links').addEventListener('click', function (e) {
+        if (e.target.classList.contains('edit-icon')) {
+            const linkItem = e.target.closest('.link-item');
+            const linkButton = linkItem.querySelector('.link-button');
+            const name = linkButton.textContent;
+            const url = linkButton.href;
 
-        #date {
-            font-size: 1.2rem;
-            color: #666;
-            margin-bottom: 1rem;
-        }
-
-        #quote {
-            font-size: 1.5rem;
-            line-height: 1.6;
-            color: #333;
-            min-height: 60px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            animation: fadeIn 1s ease-in;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-
-        /* 链接区域样式 */
-        #links {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 20px;
-            max-width: 1000px;
-            width: 90%;
-            margin: 20px;
-            padding: 20px;
-            background-color: rgba(255, 255, 255, 0.9);
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-        }
-
-        .link-button {
-            background-color: #ff9966;
-            color: white;
-            border: none;
-            padding: 15px;
-            border-radius: 10px;
-            font-size: 1rem;
-            cursor: pointer;
-            transition: transform 0.3s ease, background-color 0.3s ease;
-            text-align: center;
-            text-decoration: none;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .link-button:hover {
-            transform: scale(1.05);
-            background-color: #ff5e62;
-        }
-
-        /* 添加链接按钮样式 */
-        #add-link-button {
-            background-color: rgba(255, 153, 102, 0.8);
-            color: white;
-            border: none;
-            padding: 15px;
-            border-radius: 10px;
-            font-size: 1.5rem;
-            cursor: pointer;
-            transition: transform 0.3s ease, background-color 0.3s ease;
-            text-align: center;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        #add-link-button:hover {
-            transform: scale(1.05);
-            background-color: rgba(255, 94, 98, 0.8);
-        }
-
-        /* 模态框样式 */
-        #modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
-            justify-content: center;
-            align-items: center;
-        }
-
-        #modal-content {
-            background-color: white;
-            padding: 2rem;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-            max-width: 400px;
-            width: 90%;
-            text-align: center;
-        }
-
-        #modal-content h2 {
-            color: #ff5e62;
-            margin-bottom: 1rem;
-        }
-
-        #modal-content input {
-            width: 100%;
-            padding: 10px;
-            margin-bottom: 1rem;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            font-size: 1rem;
-        }
-
-        #modal-content button {
-            background-color: #ff9966;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 5px;
-            font-size: 1rem;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
-        }
-
-        #modal-content button:hover {
-            background-color: #ff5e62;
-        }
-    </style>
-</head>
-<body>
-    <!-- 横幅 -->
-    <div id="banner">
-        <h1>🌈 今日鼓励 🌟</h1>
-        <div id="date"></div>
-        <div id="quote"></div>
-    </div>
-
-    <!-- 链接区域 -->
-    <div id="links">
-        <!-- 链接按钮将动态添加到这里 -->
-    </div>
-
-    <!-- 添加链接按钮 -->
-    <button id="add-link-button">+</button>
-
-    <!-- 模态框 -->
-    <div id="modal">
-        <div id="modal-content">
-            <h2>添加链接</h2>
-            <input type="text" id="link-name" placeholder="链接名称" required>
-            <input type="url" id="link-url" placeholder="链接地址（以http://或https://开头）" required>
-            <button id="modal-submit">添加</button>
-        </div>
-    </div>
-
-    <script>
-        // 获取当天日期（格式：YYYY-MM-DD）
-        function getTodayDate() {
-            const today = new Date();
-            const year = today.getFullYear();
-            const month = String(today.getMonth() + 1).padStart(2, '0');
-            const day = String(today.getDate()).padStart(2, '0');
-            return `${year}-${month}-${day}`;
-        }
-
-        // 根据日期生成一个固定的随机种子
-        function getSeedFromDate(date) {
-            const dateStr = date.replace(/-/g, ''); // 去掉日期中的横杠
-            return parseInt(dateStr, 10); // 将日期字符串转换为数字
-        }
-
-        // 根据种子生成一个固定的随机索引
-        function getFixedRandomIndex(seed, length) {
-            const random = Math.sin(seed) * 10000;
-            return Math.floor((random - Math.floor(random)) * length);
-        }
-
-        // 加载每日鼓励语句
-        async function loadDailyQuote() {
-            try {
-                // 1. 获取当天日期
-                const todayDate = getTodayDate();
-                document.getElementById('date').textContent = `今天是：${todayDate}`;
-
-                // 2. 获取JSON文件
-                const response = await fetch('quotes.json');
-
-                // 3. 检查响应是否成功
-                if (!response.ok) {
-                    throw new Error(`HTTP错误! 状态码: ${response.status}`);
-                }
-
-                // 4. 解析JSON数据
-                const quotes = await response.json();
-
-                // 5. 检查quotes是否为数组且不为空
-                if (!Array.isArray(quotes)) {
-                    throw new Error('JSON数据不是数组');
-                }
-                if (quotes.length === 0) {
-                    throw new Error('JSON数据为空');
-                }
-
-                // 6. 根据日期生成固定随机索引
-                const seed = getSeedFromDate(todayDate);
-                const fixedIndex = getFixedRandomIndex(seed, quotes.length);
-
-                // 7. 显示固定语句
-                document.getElementById('quote').textContent = quotes[fixedIndex];
-
-            } catch (error) {
-                // 8. 错误处理
-                console.error('加载鼓励语句失败:', error);
-                document.getElementById('quote').textContent = "加载鼓励语句失败，请检查控制台。";
-            }
-        }
-
-        // 加载链接
-        function loadLinks() {
-            const links = JSON.parse(localStorage.getItem('links')) || [];
-            const linksContainer = document.getElementById('links');
-            linksContainer.innerHTML = links.map(link => `
-                <a href="${link.url}" class="link-button" target="_blank">${link.name}</a>
-            `).join('');
-        }
-
-        // 显示模态框
-        document.getElementById('add-link-button').addEventListener('click', function () {
+            // 弹出模态框
+            document.getElementById('link-name').value = name;
+            document.getElementById('link-url').value = url;
             document.getElementById('modal').style.display = 'flex';
-        });
 
-        // 隐藏模态框
-        document.getElementById('modal').addEventListener('click', function (e) {
-            if (e.target === this) {
-                this.style.display = 'none';
-            }
-        });
+            // 更新链接
+            document.getElementById('modal-submit').onclick = function () {
+                const newName = document.getElementById('link-name').value;
+                const newUrl = document.getElementById('link-url').value;
 
-        // 添加链接
-        document.getElementById('modal-submit').addEventListener('click', function () {
-            const name = document.getElementById('link-name').value;
-            const url = document.getElementById('link-url').value;
-
-            if (name && url) {
-                const links = JSON.parse(localStorage.getItem('links')) || [];
-                links.push({ name, url });
-                localStorage.setItem('links', JSON.stringify(links));
-                loadLinks();
-                document.getElementById('link-name').value = '';
-                document.getElementById('link-url').value = '';
-                document.getElementById('modal').style.display = 'none';
-            }
-        });
-
-        // 页面加载时调用
-        window.onload = function () {
-            loadDailyQuote();
-            loadLinks();
-        };
-    </script>
-</body>
-</html>
+                if (newName && newUrl) {
+                    linkButton.textContent = newName;
+                    linkButton.href = newUrl;
+                    updateLinksOrder();
+                    document.getElementById('modal').style.display = 'none';
+                }
+            };
+        }
+    });
+}
